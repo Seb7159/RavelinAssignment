@@ -2,41 +2,37 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"fmt" 
 	"log"
 	"net/http"
 )
 
-func main() {
-	http.HandleFunc("/helloworld", helloWorldHandler)
-
-	fmt.Println("Server now running on localhost:8080")
-	fmt.Println(`Try running: curl -X POST -d '{"hello":"test123"}' http://localhost:8080/helloworld`)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+type helloWorldRequest struct { 
+	Hello string 
 }
 
-type helloWorldRequest struct {
-	Hello string `json:"hello"`
-}
+func helloWorldHandler(w http.ResponseWriter, r *http.Request) { 
+	decoder := json.NewDecoder(r.Body) 
 
-func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	var req helloWorldRequest 
+	var err = decoder.Decode(&req); 
+	
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Unable to read body"))
-		return
+		w.Write([]byte("Unable to decode JSON request"))
+		//return
 	}
 
-	req := &helloWorldRequest{}
-
-	if err = json.Unmarshal(body, req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Unable to unmarshal JSON request"))
-		return
-	}
-
+	defer r.Body.Close() 
 	log.Printf("Request received %+v", req)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func main() {
+	http.HandleFunc("/", helloWorldHandler)
+
+	fmt.Println("Server now running on localhost:8080")
+	fmt.Println(`Try: curl -X POST -d "{\"hello\": \"that\"}" http://localhost:8080`)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

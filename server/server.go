@@ -5,34 +5,81 @@ import (
 	"fmt" 
 	"log"
 	"net/http"
+	"strings"
 )
 
-type helloWorldRequest struct { 
-	Hello string 
+
+var i	 int  = 0; 
+var data map[string]Data; 
+
+
+type Data struct {
+	WebsiteUrl         string
+	SessionId          string
+	ResizeFrom         Dimension
+	ResizeTo           Dimension
+	CopyAndPaste       map[string]bool 
+	FormCompletionTime int 
 }
 
-func helloWorldHandler(w http.ResponseWriter, r *http.Request) { 
+type Dimension struct {
+	Width  string
+	Height string
+} 
+
+
+func findId(sessId string) string {
+	for index, element := range data {
+		if strings.Compare(sessId, element.SessionId) == 0 {
+			return index 
+		}
+	}
+	return "error"
+}
+
+
+func dataHandler(w http.ResponseWriter, r *http.Request) { 
 	decoder := json.NewDecoder(r.Body) 
 
-	var req helloWorldRequest 
-	var err = decoder.Decode(&req); 
+	var dt  Data 
+	var err = decoder.Decode(&dt); 
 	
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Unable to decode JSON request"))
-		//return
+		return
 	}
-
 	defer r.Body.Close() 
-	log.Printf("Request received %+v", req)
 
-	w.WriteHeader(http.StatusOK)
+	if dt.ResizeTo.Width == ""	{
+		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId)
+		log.Println(dt.CopyAndPaste)
+		}  else {
+		log.Println("The data was COMPLETED by the following ID: " + dt.SessionId)
+		log.Println("The whole struct is: ")  
+		log.Println(dt) 
+		} 
+
+	data[dt.SessionId] = dt; 
+
+	w.WriteHeader(http.StatusOK) 
 }
 
-func main() {
-	http.HandleFunc("/", helloWorldHandler)
 
+
+func main() { 
+	data = make(map[string]Data); 
+	data["initialise"] = Data{}; 
+	
+	// Handle the main page 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, r.URL.Path[1:]) 
+	}) 
+
+	// Handle JSON requests 
+	http.HandleFunc("/data", dataHandler) 
+
+	// Show message when server is up 
 	fmt.Println("Server now running on localhost:8080")
-	fmt.Println(`Try: curl -X POST -d "{\"hello\": \"that\"}" http://localhost:8080`)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

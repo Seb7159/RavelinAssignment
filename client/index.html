@@ -77,6 +77,18 @@ body {
 
 <script>
 	 
+// See if something was pasted
+$("#inputEmail").bind('paste', function() {
+    alert("Mail paste!"); 
+});
+$("#inputCardNumber").bind('paste', function() {
+    alert("Card number paste!"); 
+});
+$("#inputCVV").bind('paste', function() {
+    $('span').text('paste behaviour detected!'); 
+    alert("CVV paste!"); 
+});
+
 
 (function($){
     $.fn.serializeObject = function(){

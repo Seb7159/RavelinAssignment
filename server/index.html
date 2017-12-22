@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bootstrap 101 Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!-- Latest compiled and minified CSS -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+      <!-- Optional theme --> 
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css"> 
+
+      <style type="text/css">
+body {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #eee;
+}
+
+.form-details {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-details .form-details-heading,
+.form-details .checkbox {
+  margin-bottom: 10px;
+}
+.form-details .checkbox {
+  font-weight: normal;
+}
+.form-details .form-control {
+  position: relative;
+  height: auto;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-details .form-control:focus {
+  z-index: 2;
+}
+      </style>
+  </head>
+  <body>
+
+
+
+    <div class="container">
+
+      <form class="form-details" method="post">
+
+        <h2 class="form-details-heading">Details</h2>
+
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input name="mail" type="email" id="inputEmail" class="form-control" 
+        placeholder="Email address" required autofocus>
+
+        <label for="inputCardNumber" class="sr-only">Card Number</label>
+        <input name="card" type="text" id="inputCardNumber" class="form-control" 
+        placeholder="Card Number" required>
+
+        <label for="inputCVV" class="sr-only">CVV</label>
+        <input name="cvvv" type="text" id="inputCVV" class="form-control" 
+        placeholder="Security Code" required>
+
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" value="agree"> Agree to Terms
+          </label>
+        </div>
+
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+      </form>
+
+    </div> <!-- /container -->
+
+  </body>
+
+<script>
+	 
+// Create session ID
+var x = Math.floor((Math.random() * 900000) + 100000);
+var y = Math.floor((Math.random() * 900000) + 100000);
+var z = Math.floor((Math.random() * 900000000) + 100000000);
+var SessionId = x + "-" + y + "-" + z; 
+
+
+// Website URL
+var websiteUrl = document.URL;  
+
+
+// Detect paste 
+var mail = false, cardNumber = false, CVV = false; 
+$("#inputEmail").bind('paste', function() {
+    mail = true; 
+    sendCopyPaste("inputEmail", mail); 
+});
+$("#inputCardNumber").bind('paste', function() {
+    cardNumber = true; 
+    sendCopyPaste("inputCardNumber", cardNumber); 
+});
+$("#inputCVV").bind('paste', function() {
+    CVV = true; 
+    sendCopyPaste("inputCVV", CVV); 
+});
+
+
+// Send copy paste JSON request 
+function sendCopyPaste(nameField, theBool){
+    var xhr = new XMLHttpRequest();
+    var url = websiteUrl + "data"; 
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText); 
+        }
+    };
+    
+    var data;
+    if( nameField == "inputEmail" )
+        data = JSON.stringify( 
+                               { 
+                                "eventType": "copyAndPaste", 
+                                "WebsiteUrl": websiteUrl, 
+                                "SessionId": SessionId, 
+                                "CopyAndPaste": { "inputEmail": theBool } 
+                               }  
+                             ); 
+    else if( nameField = "inputCardNumber" )
+        data = JSON.stringify( 
+                               { 
+                                "eventType": "copyAndPaste", 
+                                "WebsiteUrl": websiteUrl, 
+                                "SessionId": SessionId, 
+                                "CopyAndPaste": { "inputCardNumber": theBool } 
+                               }  
+                             ); 
+    else if( nameField = "inputCVV" )
+        data = JSON.stringify( 
+                               { 
+                                "eventType": "copyAndPaste", 
+                                "WebsiteUrl": websiteUrl, 
+                                "SessionId": SessionId, 
+                                "CopyAndPaste": { "inputCVV": theBool } 
+                               }  
+                             ); 
+    else{
+      console.log("Field is not registered!");
+      return; 
+    }
+    xhr.send(data); 
+} 
+
+
+// Get time from first character to submit 
+var startTime = -1, finalTime = 0;
+var flag = 0; // bool 
+document.onkeydown = function(e) {
+  if( flag == 0 ){ 
+    if ((e.keyCode >= 65 && e.keyCode <= 90) ||
+        (e.keyCode >= 97 && e.keyCode <= 122) ||
+        (e.keyCode >= 48 && e.keyCode <= 57)){
+        var d = new Date();
+        startTime = Math.round(d.getTime() / 1000); 
+        flag = 1; 
+    } 
+  } 
+};
+
+
+// When the submit button was pressed 
+$("button").click(function(){ 
+    // Is letter method 
+    function isLetter(str) { 
+      return str.match("^[a-zA-Z0-9_]*$");
+    }
+
+    var inputMail = document.getElementById("inputEmail").value; 
+    if( isLetter(inputMail.slice(-1)) == null ||
+        isLetter(inputMail.charAt(0)) == null || 
+        document.getElementById("inputEmail").value == "" || 
+        document.getElementById("inputCardNumber").value == "" ||
+        document.getElementById("inputCVV").value == "" ||
+        document.getElementById("inputEmail").value.indexOf("@") === -1 ) 
+          return; 
+
+    if( flag == 1 ) 
+      finalTime = Math.round(new Date().getTime() / 1000) - startTime; 
+    
+    var xhr = new XMLHttpRequest();
+    var url = websiteUrl + "data";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText); 
+        } 
+    };
+
+    var data = JSON.stringify( 
+                              {
+                                 "eventType": "timeTaken", 
+                                 "WebsiteUrl": websiteUrl, 
+                                 "SessionId": SessionId,
+                                 "ResizeFrom": {
+                                  "Width": "100", "Height": "200"
+                                 },
+                                 "ResizeTo": {
+                                  "Width": "300", "Height": "400" 
+                                 },
+                                 "CopyAndPaste": 
+                                    { "inputEmail": mail , 
+                                      "inputCardNumber": cardNumber , 
+                                      "inputCVV": CVV },
+                                 "FormCompletionTime": finalTime 
+                                } 
+                              ); 
+    xhr.send(data); 5
+});
+
+
+
+</script>
+
+</html> 

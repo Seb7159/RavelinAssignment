@@ -121,45 +121,22 @@ function sendCopyPaste(nameField, theBool){
           if( xhr.status == 200 )
             ;
           else
-            error_handle(xhr.status); 
+            error_handle(xhr.readyState, xhr.status); 
         }  
     };
     
     // For every input send different JSON (could be done easier but there's an issue)
     // TODO: Eliminate if and send one JSON with nameField instead 
-    var data;
-    if( nameField == "inputEmail" )
-        data = JSON.stringify( 
+    var data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
                                 "WebsiteUrl": websiteUrl, 
                                 "SessionId": SessionId, 
-                                "CopyAndPaste": { "inputEmail": theBool } 
+                                "pasted": true, 
+                                "formId": nameField 
                                }  
                              ); 
-    else if( nameField == "inputCardNumber" )
-        data = JSON.stringify( 
-                               { 
-                                "eventType": "copyAndPaste", 
-                                "WebsiteUrl": websiteUrl, 
-                                "SessionId": SessionId, 
-                                "CopyAndPaste": { "inputCardNumber": theBool } 
-                               }  
-                             ); 
-    else if( nameField == "inputCVV" ) 
-        data = JSON.stringify( 
-                               { 
-                                "eventType": "copyAndPaste", 
-                                "WebsiteUrl": websiteUrl, 
-                                "SessionId": SessionId, 
-                                "CopyAndPaste": { "inputCVV": theBool } 
-                               }  
-                             ); 
-    else{
-      console.log("Field is not registered!");
-      return; 
-    }
-    
+
     xhr.send(data); 
 } 
 
@@ -181,8 +158,8 @@ document.onkeydown = function(e) {
 
 
 // Handle error from HTTP bad request method 
-function error_handle(status){
-  console.log("Error HTTP status " + status + "!"); 
+function error_handle(ready, status){
+  console.log("Error HTTP status " + status + " with ready state " + ready + "!"); 
 }
 
 
@@ -217,7 +194,7 @@ $("button").click(function(){
           if( xhr.status == 200 )
             ;
           else
-            error_handle(xhr.status); 
+            error_handle(xhr.readyState, xhr.status); 
         } 
     };
 
@@ -236,10 +213,10 @@ $("button").click(function(){
                                  "ResizeTo": {
                                   "Width": finWidth, "Height": finHeight 
                                  },
-                                 "CopyAndPaste": 
-                                    { "inputEmail": mail , 
-                                      "inputCardNumber": cardNumber , 
-                                      "inputCVV": CVV },
+                                 //"CopyAndPaste": 
+                                   // { "inputEmail": mail , 
+                                     // "inputCardNumber": cardNumber , 
+                                      //"inputCVV": CVV },
                                  "FormCompletionTime": finalTime 
                                 } 
                               ); 

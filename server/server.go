@@ -9,8 +9,24 @@ import (
 
 
 // Declare the 'data' map variable globally 
-var data map[string]Data; 
+var data map[string]*Data; 
 
+
+// Temporary JSON request struct
+type tempJSONrequest struct {
+	EventType		   string
+	FormId			   string 
+	WebsiteUrl         string 
+	SessionId          string
+	ResizeFrom         Dimension
+	ResizeTo           Dimension
+	CopyAndPaste       map[string]bool 
+	Pasted			   bool 
+	FormCompletionTime int 
+}
+
+
+// Default given structs TODO: add name json to each of those 
 type Data struct {
 	WebsiteUrl         string 
 	SessionId          string
@@ -32,7 +48,7 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body) 
 
 	// Declare the temporary data and error variables 
-	var dt  Data 
+	var dt  tempJSONrequest  
 	var err = decoder.Decode(&dt) 
 	
 	// Handle errors 
@@ -45,16 +61,43 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Print data in the console 
 	fmt.Println(""); 
-	if dt.ResizeTo.Width == ""	{
+	// In case there was copy-paste detected 
+	if dt.EventType == "copyAndPaste"	{
 		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId)
-		log.Println(dt.CopyAndPaste)
-		}  else {
+		data[dt.SessionId] = &Data{} 
+		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
+		data[dt.SessionId].SessionId 				   = dt.SessionId
+		data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+		data[dt.SessionId].CopyAndPaste[dt.FormId]     = dt.Pasted 
+		
+		}  else if dt.EventType == "timeTaken" { 
+		// In case the submit button was pressed 
 		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId)
-		log.Println(dt) 
+		data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
+		data[dt.SessionId].SessionId 				   = dt.SessionId
+		data[dt.SessionId].ResizeFrom.Width 		   = dt.ResizeFrom.Width
+		data[dt.SessionId].ResizeFrom.Height 		   = dt.ResizeFrom.Height 
+		data[dt.SessionId].ResizeTo.Width 			   = dt.ResizeTo.Width
+		data[dt.SessionId].ResizeTo.Height			   = dt.ResizeTo.Height 
+		data[dt.SessionId].FormCompletionTime		   = dt.FormCompletionTime  
+		// Check if the copyAndPaste map fields exist and initalise them 
+		if ok := data[dt.SessionId].CopyAndPaste["inputEmail"]; !ok {
+		    data[dt.SessionId].CopyAndPaste["inputEmail"] = false 
+		}	
+		if ok := data[dt.SessionId].CopyAndPaste["inputCardNumber"]; !ok {
+		    data[dt.SessionId].CopyAndPaste["inputCardNumber"] = false 
+		}	
+		if ok := data[dt.SessionId].CopyAndPaste["inputCVV"]; !ok { 
+		    data[dt.SessionId].CopyAndPaste["inputCVV"] = false 
 		} 
 
-	// Put JSON in the 'data' map 
-	data[dt.SessionId] = dt 
+		// Print element struct 
+		log.Println(data[dt.SessionId]) 
+		} else { // In case the eventType is not recognised 
+			log.Println("ERROR! JSON request event type is not recognised! ")
+			return; 
+		}
 
 	// Send status OK in HTTP 
 	w.WriteHeader(http.StatusOK) 
@@ -78,7 +121,7 @@ func showMap(w http.ResponseWriter, r *http.Request) {
 // Main method 
 func main() { 
 	// Initialise 'data' map 
-	data = make(map[string]Data) 
+	data = make(map[string]*Data) 
 	
 	// Handle index.html 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -12,7 +12,7 @@ import (
 var data map[string]Data; 
 
 type Data struct {
-	WebsiteUrl         string
+	WebsiteUrl         string 
 	SessionId          string
 	ResizeFrom         Dimension
 	ResizeTo           Dimension

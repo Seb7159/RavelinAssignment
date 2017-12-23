@@ -130,8 +130,8 @@ function sendCopyPaste(nameField, theBool){
     var data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
-                                "WebsiteUrl": websiteUrl, 
-                                "SessionId": SessionId, 
+                                "websiteUrl": websiteUrl, 
+                                "sessionId": SessionId, 
                                 "pasted": true, 
                                 "formId": nameField 
                                }  
@@ -144,11 +144,11 @@ function sendCopyPaste(nameField, theBool){
 // Get time from first character typed to last possible action (submit) 
 var startTime = -1, finalTime = 0;
 var flag = false; 
-document.onkeydown = function(e) {
-  if( flag == true ){ 
+document.onkeydown = function(e) { 
+  if( flag == false ){ 
     if ((e.keyCode >= 65 && e.keyCode <= 90) ||
         (e.keyCode >= 97 && e.keyCode <= 122) ||
-        (e.keyCode >= 48 && e.keyCode <= 57)){
+        (e.keyCode >= 48 && e.keyCode <= 57)){ 
         var d = new Date();
         startTime = Math.round(d.getTime() / 1000); 
         flag = true; 
@@ -170,10 +170,14 @@ $("button").click(function(){
       return str.match("^[a-zA-Z0-9_]*$");
     }
 
+    function validateEmail(email) {
+      var re = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/; 
+      return re.test(email.toLowerCase());
+    } 
+
     // Validate fields first 
     var inputMail = document.getElementById("inputEmail").value; 
-    if( isLetter(inputMail.slice(-1)) == null ||
-        isLetter(inputMail.charAt(0)) == null || 
+    if( validateEmail(inputMail) == false ||  
         document.getElementById("inputEmail").value == "" || 
         document.getElementById("inputCardNumber").value == "" ||
         document.getElementById("inputCVV").value == "" ||
@@ -202,22 +206,20 @@ $("button").click(function(){
     var finWidth  = window.screen.availWidth.toString(),
         finHeight = window.screen.availHeight.toString(); 
 
+    // Need to add resize if it happens     
+
     var data = JSON.stringify( 
                               {
                                  "eventType": "timeTaken", 
-                                 "WebsiteUrl": websiteUrl, 
-                                 "SessionId": SessionId,
-                                 "ResizeFrom": {
+                                 "websiteUrl": websiteUrl, 
+                                 "sessionId": SessionId,
+                                 /*"ResizeFrom": {    
                                   "Width": initWidth, "Height": initHeight 
                                  },
                                  "ResizeTo": {
                                   "Width": finWidth, "Height": finHeight 
-                                 },
-                                 //"CopyAndPaste": 
-                                   // { "inputEmail": mail , 
-                                     // "inputCardNumber": cardNumber , 
-                                      //"inputCVV": CVV },
-                                 "FormCompletionTime": finalTime 
+                                 },*/  
+                                 "time": finalTime 
                                 } 
                               ); 
     xhr.send(data); 

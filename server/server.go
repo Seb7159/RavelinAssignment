@@ -14,15 +14,15 @@ var data map[string]*Data;
 
 // Temporary JSON request struct
 type tempJSONrequest struct {
-	EventType		   string
-	FormId			   string 
-	WebsiteUrl         string 
-	SessionId          string
-	ResizeFrom         Dimension
+	EventType		   string 			`json:"eventType"`
+	FormId			   string 			`json:"formId"`
+	WebsiteUrl         string 			`json:"websiteUrl"`
+	SessionId          string			`json:"sessionId"`
+	ResizeFrom         Dimension		
 	ResizeTo           Dimension
-	CopyAndPaste       map[string]bool 
-	Pasted			   bool 
-	FormCompletionTime int 
+	CopyAndPaste       map[string]bool 	
+	Pasted			   bool 			`json:"pasted"`
+	FormCompletionTime int 				`json:"time"` 
 }
 
 
@@ -64,16 +64,27 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	// In case there was copy-paste detected 
 	if dt.EventType == "copyAndPaste"	{
 		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId)
-		data[dt.SessionId] = &Data{} 
+		if _, ok := data[dt.SessionId]; !ok {
+		    data[dt.SessionId] = &Data{} 
+		} 
 		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
 		data[dt.SessionId].SessionId 				   = dt.SessionId
-		data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+		if len(data[dt.SessionId].CopyAndPaste) == 0 {
+					data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+				} 
 		data[dt.SessionId].CopyAndPaste[dt.FormId]     = dt.Pasted 
+		log.Println("The following input was pasted: " + dt.FormId) 
 		
 		}  else if dt.EventType == "timeTaken" { 
 		// In case the submit button was pressed 
 		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId)
-		data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+		if _, ok := data[dt.SessionId]; !ok {
+		    data[dt.SessionId] = &Data{} 
+		}
+		if len(data[dt.SessionId].CopyAndPaste) == 0 {
+					data[dt.SessionId] = &Data{} 
+					data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+				}
 		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
 		data[dt.SessionId].SessionId 				   = dt.SessionId
 		data[dt.SessionId].ResizeFrom.Width 		   = dt.ResizeFrom.Width
@@ -93,7 +104,9 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		} 
 
 		// Print element struct 
-		log.Println(data[dt.SessionId]) 
+		log.Println(*data[dt.SessionId]) 
+
+
 		} else { // In case the eventType is not recognised 
 			log.Println("ERROR! JSON request event type is not recognised! ")
 			return; 

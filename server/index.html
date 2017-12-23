@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html> 
   <head>
     <title>Bootstrap 101 Template</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,19 +76,25 @@ body {
   </body>
 
 <script>
+
 	 
-// Create session ID
+// Session ID setter 
 var x = Math.floor((Math.random() * 900000) + 100000);
 var y = Math.floor((Math.random() * 900000) + 100000);
 var z = Math.floor((Math.random() * 900000000) + 100000000);
 var SessionId = x + "-" + y + "-" + z; 
 
 
-// Website URL
+// Website URL setter 
 var websiteUrl = document.URL;  
 
 
-// Detect paste 
+// Initial dimensions setter
+var initWidth  = window.screen.availWidth.toString(),
+    initHeight = window.screen.availHeight.toString(); 
+
+
+// Detect paste listeners 
 var mail = false, cardNumber = false, CVV = false; 
 $("#inputEmail").bind('paste', function() {
     mail = true; 
@@ -111,11 +117,16 @@ function sendCopyPaste(nameField, theBool){
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-type", "application/json");
     xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            var json = JSON.parse(xhr.responseText); 
-        }
+        if (xhr.readyState === 4 ){
+          if( xhr.status == 200 )
+            ;
+          else
+            error_handle(xhr.status); 
+        }  
     };
     
+    // For every input send different JSON (could be done easier but there's an issue)
+    // TODO: Eliminate if and send one JSON with nameField instead 
     var data;
     if( nameField == "inputEmail" )
         data = JSON.stringify( 
@@ -126,7 +137,7 @@ function sendCopyPaste(nameField, theBool){
                                 "CopyAndPaste": { "inputEmail": theBool } 
                                }  
                              ); 
-    else if( nameField = "inputCardNumber" )
+    else if( nameField == "inputCardNumber" )
         data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
@@ -135,7 +146,7 @@ function sendCopyPaste(nameField, theBool){
                                 "CopyAndPaste": { "inputCardNumber": theBool } 
                                }  
                              ); 
-    else if( nameField = "inputCVV" )
+    else if( nameField == "inputCVV" ) 
         data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
@@ -148,24 +159,31 @@ function sendCopyPaste(nameField, theBool){
       console.log("Field is not registered!");
       return; 
     }
+    
     xhr.send(data); 
 } 
 
 
-// Get time from first character to submit 
+// Get time from first character typed to last possible action (submit) 
 var startTime = -1, finalTime = 0;
-var flag = 0; // bool 
+var flag = false; 
 document.onkeydown = function(e) {
-  if( flag == 0 ){ 
+  if( flag == true ){ 
     if ((e.keyCode >= 65 && e.keyCode <= 90) ||
         (e.keyCode >= 97 && e.keyCode <= 122) ||
         (e.keyCode >= 48 && e.keyCode <= 57)){
         var d = new Date();
         startTime = Math.round(d.getTime() / 1000); 
-        flag = 1; 
+        flag = true; 
     } 
   } 
 };
+
+
+// Handle error from HTTP bad request method 
+function error_handle(status){
+  console.log("Error HTTP status " + status + "!"); 
+}
 
 
 // When the submit button was pressed 
@@ -175,6 +193,7 @@ $("button").click(function(){
       return str.match("^[a-zA-Z0-9_]*$");
     }
 
+    // Validate fields first 
     var inputMail = document.getElementById("inputEmail").value; 
     if( isLetter(inputMail.slice(-1)) == null ||
         isLetter(inputMail.charAt(0)) == null || 
@@ -184,18 +203,27 @@ $("button").click(function(){
         document.getElementById("inputEmail").value.indexOf("@") === -1 ) 
           return; 
 
-    if( flag == 1 ) 
+    // Check if there is a start time 
+    if( flag == true ) 
       finalTime = Math.round(new Date().getTime() / 1000) - startTime; 
     
+    // Create JSON request and send 
     var xhr = new XMLHttpRequest();
     var url = websiteUrl + "data";
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-type", "application/json");
     xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            var json = JSON.parse(xhr.responseText); 
+        if (xhr.readyState === 4 ){
+          if( xhr.status == 200 )
+            ;
+          else
+            error_handle(xhr.status); 
         } 
     };
+
+    // Detect final dimensions 
+    var finWidth  = window.screen.availWidth.toString(),
+        finHeight = window.screen.availHeight.toString(); 
 
     var data = JSON.stringify( 
                               {
@@ -203,10 +231,10 @@ $("button").click(function(){
                                  "WebsiteUrl": websiteUrl, 
                                  "SessionId": SessionId,
                                  "ResizeFrom": {
-                                  "Width": "100", "Height": "200"
+                                  "Width": initWidth, "Height": initHeight 
                                  },
                                  "ResizeTo": {
-                                  "Width": "300", "Height": "400" 
+                                  "Width": finWidth, "Height": finHeight 
                                  },
                                  "CopyAndPaste": 
                                     { "inputEmail": mail , 
@@ -215,9 +243,8 @@ $("button").click(function(){
                                  "FormCompletionTime": finalTime 
                                 } 
                               ); 
-    xhr.send(data); 5
+    xhr.send(data); 
 });
-
 
 
 </script>

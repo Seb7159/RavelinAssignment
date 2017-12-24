@@ -5,7 +5,7 @@ Ravelin Code Test
 To run the server, go through CMD to the path where server.go is (/server) and, either run the server.exe file or run "go run server.go". Then, you may connect to http://localhost:8080/ where you will be able to see how the server works. 
 
 ## Contact
-In case something does not work, please do not hesitate to contact me at the following email address: stanicisebastian@yahoo.com. 
+In case of any issue, contact me at the following email address: stanicisebastian@yahoo.com. 
 
 ## Summary
 We need an HTTP server that will accept any POST request (JSON) from muliple clients' websites. Each request forms part of a struct (for that particular visitor) that will be printed to the terminal when the struct is fully complete. 

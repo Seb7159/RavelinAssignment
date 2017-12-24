@@ -12,7 +12,7 @@ import (
 var data map[string]*Data; 
 
 
-// Temporary JSON request struct
+// Temporary JSON request struct 
 type tempJSONrequest struct {
 	EventType		   string 			`json:"eventType"`
 	FormId			   string 			`json:"formId"`

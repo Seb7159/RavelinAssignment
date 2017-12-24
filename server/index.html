@@ -125,8 +125,7 @@ function sendCopyPaste(nameField, theBool){
         }  
     };
     
-    // For every input send different JSON (could be done easier but there's an issue)
-    // TODO: Eliminate if and send one JSON with nameField instead 
+    // Construct and send JSON request 
     var data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
@@ -136,7 +135,6 @@ function sendCopyPaste(nameField, theBool){
                                 "formId": nameField 
                                }  
                              ); 
-
     xhr.send(data); 
 } 
 
@@ -178,6 +176,7 @@ function sendResizeData( width, height){
         }  
     };
     
+    // Construct JSON request and send 
     var data = JSON.stringify( 
                                { 
                                 "eventType": "resizeWindow", 
@@ -191,7 +190,6 @@ function sendResizeData( width, height){
                                  } 
                                }  
                              ); 
-
     xhr.send(data); 
 }
 
@@ -203,6 +201,7 @@ $("button").click(function(){
       return str.match("^[a-zA-Z0-9_]*$");
     }
 
+    // Validate mail address method 
     function validateEmail(email) {
       var re = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/; 
       return re.test(email.toLowerCase());

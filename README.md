@@ -2,7 +2,7 @@ Ravelin Code Test
 =================
 
 ## Notice
-To run the server, go through CMD to the path where server.go is (/server) and, either run server.exe file or run "go run server.go". Then, you will be able to connect to http://localhost:8080/ where you will be able to see how the server works. 
+To run the server, go through CMD to the path where server.go is (/server) and, either run the server.exe file or run "go run server.go". Then, you may connect to http://localhost:8080/ where you will be able to see how the server works. 
 
 ## Contact
 In case something does not work, please do not hesitate to contact me at the following email address: stanicisebastian@yahoo.com. 

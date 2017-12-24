@@ -59,39 +59,74 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close() 
 
+
 	// Print data in the console 
-	fmt.Println(""); 
+	fmt.Println(); 
 	// In case there was copy-paste detected 
 	if dt.EventType == "copyAndPaste"	{
 		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId)
+		
+		// If the key was not initialised before 
 		if _, ok := data[dt.SessionId]; !ok {
 		    data[dt.SessionId] = &Data{} 
 		} 
+
+		// Assign values 
 		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
 		data[dt.SessionId].SessionId 				   = dt.SessionId
+
+		// Check if map for copyAndPaste was initialised before 
 		if len(data[dt.SessionId].CopyAndPaste) == 0 {
 					data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
 				} 
 		data[dt.SessionId].CopyAndPaste[dt.FormId]     = dt.Pasted 
+		
+		// Print the confirmation 
 		log.Println("The following input was pasted: " + dt.FormId) 
 		
-		}  else if dt.EventType == "timeTaken" { 
-		// In case the submit button was pressed 
-		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId)
+
+	} else if dt.EventType == "resizeWindow" {
+		// In case the window was resized 
+		log.Println("RESIZE detected from the following ID: " + dt.SessionId)
+
+		// If the key was not initialised before 
 		if _, ok := data[dt.SessionId]; !ok {
 		    data[dt.SessionId] = &Data{} 
 		}
-		if len(data[dt.SessionId].CopyAndPaste) == 0 {
-					data[dt.SessionId] = &Data{} 
-					data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
-				}
-		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
-		data[dt.SessionId].SessionId 				   = dt.SessionId
+
+		// Assign values 
 		data[dt.SessionId].ResizeFrom.Width 		   = dt.ResizeFrom.Width
 		data[dt.SessionId].ResizeFrom.Height 		   = dt.ResizeFrom.Height 
 		data[dt.SessionId].ResizeTo.Width 			   = dt.ResizeTo.Width
 		data[dt.SessionId].ResizeTo.Height			   = dt.ResizeTo.Height 
+
+		// Print element struct 
+		log.Println(*data[dt.SessionId]) 
+
+
+	} else if dt.EventType == "timeTaken" { 
+		// In case the submit button was pressed 
+		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId)
+		
+		// If the key was not initialised before 
+		if _, ok := data[dt.SessionId]; !ok {
+		    data[dt.SessionId] = &Data{} 
+		}
+		
+		// In case there were no copyAndPaste events before 
+		if len(data[dt.SessionId].CopyAndPaste) == 0 { 
+				// Initialise element if copyAndPaste or resize not happened 
+				if data[dt.SessionId].ResizeFrom.Width == ""{
+					data[dt.SessionId] = &Data{} 
+				}
+				data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+		} 
+		
+		// Assign values 
+		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
+		data[dt.SessionId].SessionId 				   = dt.SessionId 
 		data[dt.SessionId].FormCompletionTime		   = dt.FormCompletionTime  
+		
 		// Check if the copyAndPaste map fields exist and initalise them 
 		if ok := data[dt.SessionId].CopyAndPaste["inputEmail"]; !ok {
 		    data[dt.SessionId].CopyAndPaste["inputEmail"] = false 
@@ -102,15 +137,16 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		if ok := data[dt.SessionId].CopyAndPaste["inputCVV"]; !ok { 
 		    data[dt.SessionId].CopyAndPaste["inputCVV"] = false 
 		} 
-
+		
 		// Print element struct 
 		log.Println(*data[dt.SessionId]) 
 
 
-		} else { // In case the eventType is not recognised 
-			log.Println("ERROR! JSON request event type is not recognised! ")
-			return; 
-		}
+	} else { // In case the eventType is not recognised 
+		log.Println("ERROR! JSON request event type is not recognised! ")
+		return; 
+	}
+
 
 	// Send status OK in HTTP 
 	w.WriteHeader(http.StatusOK) 

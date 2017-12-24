@@ -90,8 +90,8 @@ var websiteUrl = document.URL;
 
 
 // Initial dimensions setter
-var initWidth  = window.screen.availWidth.toString(),
-    initHeight = window.screen.availHeight.toString(); 
+var initWidth  = window.innerWidth.toString(),
+    initHeight = window.innerHeight.toString(); 
 
 
 // Detect paste listeners 
@@ -163,6 +163,39 @@ function error_handle(ready, status){
 }
 
 
+// Send JSON request when resize occurs method 
+function sendResizeData( width, height){
+  var xhr = new XMLHttpRequest();
+    var url = websiteUrl + "data"; 
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 ){
+          if( xhr.status == 200 )
+            ;
+          else
+            error_handle(xhr.readyState, xhr.status); 
+        }  
+    };
+    
+    var data = JSON.stringify( 
+                               { 
+                                "eventType": "resizeWindow", 
+                                "websiteUrl": websiteUrl, 
+                                "sessionId": SessionId, 
+                                "ResizeFrom": {    
+                                  "Width": initWidth, "Height": initHeight 
+                                 },
+                                 "ResizeTo": {
+                                  "Width": width, "Height": height 
+                                 } 
+                               }  
+                             ); 
+
+    xhr.send(data); 
+}
+
+
 // When the submit button was pressed 
 $("button").click(function(){ 
     // Is letter method 
@@ -184,6 +217,12 @@ $("button").click(function(){
         document.getElementById("inputEmail").value.indexOf("@") === -1 ) 
           return; 
 
+    // Detect dimension of window and send HTTP request in case of change 
+    var finWidth  = window.innerWidth.toString(),
+        finHeight = window.innerHeight.toString(); 
+    if( finWidth !== initWidth || finHeight !== initHeight )
+      sendResizeData( finWidth, finHeight); 
+
     // Check if there is a start time 
     if( flag == true ) 
       finalTime = Math.round(new Date().getTime() / 1000) - startTime; 
@@ -202,23 +241,13 @@ $("button").click(function(){
         } 
     };
 
-    // Detect final dimensions 
-    var finWidth  = window.screen.availWidth.toString(),
-        finHeight = window.screen.availHeight.toString(); 
-
-    // Need to add resize if it happens     
-
+    // Construct JSON and send it 
     var data = JSON.stringify( 
                               {
                                  "eventType": "timeTaken", 
                                  "websiteUrl": websiteUrl, 
                                  "sessionId": SessionId,
-                                 /*"ResizeFrom": {    
-                                  "Width": initWidth, "Height": initHeight 
-                                 },
-                                 "ResizeTo": {
-                                  "Width": finWidth, "Height": finHeight 
-                                 },*/  
+                                  
                                  "time": finalTime 
                                 } 
                               ); 

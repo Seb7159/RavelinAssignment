@@ -90,7 +90,7 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("RESIZE detected from the following ID: " + dt.SessionId)
 
 		// If the key was not initialised before 
-		if _, ok := data[dt.SessionId]; !ok {
+		if _, ok := data[dt.SessionId]; !ok { 
 		    data[dt.SessionId] = &Data{} 
 		}
 

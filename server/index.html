@@ -51,15 +51,15 @@ body {
         <h2 class="form-details-heading">Details</h2>
 
         <label for="inputEmail" class="sr-only">Email address</label>
-        <input name="mail" type="email" id="inputEmail" class="form-control" 
+        <input type="email" id="inputEmail" class="form-control" 
         placeholder="Email address" required autofocus>
 
         <label for="inputCardNumber" class="sr-only">Card Number</label>
-        <input name="card" type="text" id="inputCardNumber" class="form-control" 
+        <input type="text" id="inputCardNumber" class="form-control" 
         placeholder="Card Number" required>
 
         <label for="inputCVV" class="sr-only">CVV</label>
-        <input name="cvvv" type="text" id="inputCVV" class="form-control" 
+        <input type="text" id="inputCVV" class="form-control" 
         placeholder="Security Code" required>
 
         <div class="checkbox">
@@ -76,8 +76,8 @@ body {
   </body>
 
 <script>
-
 	 
+
 // Session ID setter 
 var x = Math.floor((Math.random() * 900000) + 100000);
 var y = Math.floor((Math.random() * 900000) + 100000);
@@ -163,7 +163,7 @@ function error_handle(ready, status){
 
 // Send JSON request when resize occurs method 
 function sendResizeData( width, height){
-  var xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     var url = websiteUrl + "data"; 
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-type", "application/json");
@@ -194,6 +194,22 @@ function sendResizeData( width, height){
 }
 
 
+// Check on resize event every 1 second, send JSON request 
+setInterval( function checkRes(){
+    // Detect dimension of window and send HTTP request in case of change 
+    var finWidth  = window.innerWidth.toString(),
+        finHeight = window.innerHeight.toString(); 
+    
+    // If it's true, send the request 
+    if( finWidth !== initWidth || finHeight !== initHeight ){ 
+      sendResizeData( finWidth, finHeight);
+      initWidth  = finWidth;   
+      initHeight = finHeight;  
+    }
+
+}, 1000); 
+
+
 // When the submit button was pressed 
 $("button").click(function(){ 
     // Is letter method 
@@ -214,13 +230,7 @@ $("button").click(function(){
         document.getElementById("inputCardNumber").value == "" ||
         document.getElementById("inputCVV").value == "" ||
         document.getElementById("inputEmail").value.indexOf("@") === -1 ) 
-          return; 
-
-    // Detect dimension of window and send HTTP request in case of change 
-    var finWidth  = window.innerWidth.toString(),
-        finHeight = window.innerHeight.toString(); 
-    if( finWidth !== initWidth || finHeight !== initHeight )
-      sendResizeData( finWidth, finHeight); 
+          return;  
 
     // Check if there is a start time 
     if( flag == true ) 

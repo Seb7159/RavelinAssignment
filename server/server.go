@@ -5,11 +5,12 @@ import (
 	"fmt" 
 	"log"
 	"net/http" 
+	"sync" 
 )
 
 
 // Declare the 'data' map variable globally 
-var data map[string]*Data; 
+var data sync.Map; 
 
 
 // Temporary JSON request struct 
@@ -41,7 +42,6 @@ type Dimension struct {
 	Height string
 } 
 
-
 // Data handler method 
 func dataHandler(w http.ResponseWriter, r *http.Request) { 
 	// Decode the JSON 
@@ -59,87 +59,97 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close() 
 
-
+	// Make a temporary Data variable 
+	var tempData Data 
+	// If the key was initialised before 
+	if result, ok := data.Load(dt.SessionId); ok {
+	    tempData.WebsiteUrl 			= result.(Data).WebsiteUrl
+	    tempData.SessionId 				= result.(Data).SessionId
+	    tempData.ResizeFrom			 	= result.(Data).ResizeFrom
+	    tempData.ResizeTo  				= result.(Data).ResizeTo
+	    tempData.CopyAndPaste  			= result.(Data).CopyAndPaste
+	    tempData.FormCompletionTime  	= result.(Data).FormCompletionTime 
+	// Else if it was not 
+	} else { tempData = Data{} } 
+	
 	// Print data in the console 
-	fmt.Println(); 
+	log.Println(); 
 	// In case there was copy-paste detected 
 	if dt.EventType == "copyAndPaste"	{
-		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId)
-		
-		// If the key was not initialised before 
-		if _, ok := data[dt.SessionId]; !ok {
-		    data[dt.SessionId] = &Data{} 
-		} 
+		log.Println("COPY-PASTE detected from session ID: " + dt.SessionId) 
 
 		// Assign values 
-		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
-		data[dt.SessionId].SessionId 				   = dt.SessionId
+		tempData.WebsiteUrl    = dt.WebsiteUrl 
+		tempData.SessionId	   = dt.SessionId
 
 		// Check if map for copyAndPaste was initialised before 
-		if len(data[dt.SessionId].CopyAndPaste) == 0 {
-					data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
-				} 
-		data[dt.SessionId].CopyAndPaste[dt.FormId]     = dt.Pasted 
+		if len(tempData.CopyAndPaste) == 0 {
+					tempData.CopyAndPaste    = make(map[string]bool) 
+		} 
+		tempData.CopyAndPaste[dt.FormId]     = dt.Pasted 
 		
+		// Assign the temporary value to the map
+		data.Store(dt.SessionId, tempData) 
+
 		// Print the confirmation 
 		log.Println("The following input was pasted: " + dt.FormId) 
 		
 
 	} else if dt.EventType == "resizeWindow" {
 		// In case the window was resized 
-		log.Println("RESIZE detected from the following ID: " + dt.SessionId)
-
-		// If the key was not initialised before 
-		if _, ok := data[dt.SessionId]; !ok { 
-		    data[dt.SessionId] = &Data{} 
-		}
+		log.Println("RESIZE detected from the following ID: " + dt.SessionId) 
 
 		// Assign values 
-		data[dt.SessionId].ResizeFrom.Width 		   = dt.ResizeFrom.Width
-		data[dt.SessionId].ResizeFrom.Height 		   = dt.ResizeFrom.Height 
-		data[dt.SessionId].ResizeTo.Width 			   = dt.ResizeTo.Width
-		data[dt.SessionId].ResizeTo.Height			   = dt.ResizeTo.Height 
+		tempData.WebsiteUrl 			   = dt.WebsiteUrl
+		tempData.SessionId 				   = dt.SessionId 
+		tempData.ResizeFrom.Width 		   = dt.ResizeFrom.Width
+		tempData.ResizeFrom.Height 		   = dt.ResizeFrom.Height 
+		tempData.ResizeTo.Width 		   = dt.ResizeTo.Width
+		tempData.ResizeTo.Height		   = dt.ResizeTo.Height 
+
+
+		// Assign the temporary value to the map
+		data.Store(dt.SessionId, tempData) 
 
 		// Print element struct 
-		log.Println(*data[dt.SessionId]) 
+		log.Println(tempData) 
 
 
 	} else if dt.EventType == "timeTaken" { 
 		// In case the submit button was pressed 
-		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId)
-		
-		// If the key was not initialised before 
-		if _, ok := data[dt.SessionId]; !ok {
-		    data[dt.SessionId] = &Data{} 
-		}
-		
+		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId) 
+
 		// In case there were no copyAndPaste events before 
-		if len(data[dt.SessionId].CopyAndPaste) == 0 { 
+		if len(tempData.CopyAndPaste) == 0 { 
 				// Initialise element if copyAndPaste or resize not happened 
-				if data[dt.SessionId].ResizeFrom.Width == ""{
-					data[dt.SessionId] = &Data{} 
+				if tempData.ResizeFrom.Width == ""{
+					tempData = Data{} 
 				}
-				data[dt.SessionId].CopyAndPaste    = make(map[string]bool) 
+				tempData.CopyAndPaste    = make(map[string]bool) 
 		} 
 		
 		// Assign values 
-		data[dt.SessionId].WebsiteUrl 				   = dt.WebsiteUrl
-		data[dt.SessionId].SessionId 				   = dt.SessionId 
-		data[dt.SessionId].FormCompletionTime		   = dt.FormCompletionTime  
+		tempData.WebsiteUrl 			   = dt.WebsiteUrl
+		tempData.SessionId 				   = dt.SessionId 
+		tempData.FormCompletionTime		   = dt.FormCompletionTime  
 		
 		// Check if the copyAndPaste map fields exist and initalise them 
-		if ok := data[dt.SessionId].CopyAndPaste["inputEmail"]; !ok {
-		    data[dt.SessionId].CopyAndPaste["inputEmail"] = false 
+		if ok := tempData.CopyAndPaste["inputEmail"]; !ok {
+		    tempData.CopyAndPaste["inputEmail"] = false 
 		}	
-		if ok := data[dt.SessionId].CopyAndPaste["inputCardNumber"]; !ok {
-		    data[dt.SessionId].CopyAndPaste["inputCardNumber"] = false 
+		if ok := tempData.CopyAndPaste["inputCardNumber"]; !ok {
+		    tempData.CopyAndPaste["inputCardNumber"] = false 
 		}	
-		if ok := data[dt.SessionId].CopyAndPaste["inputCVV"]; !ok { 
-		    data[dt.SessionId].CopyAndPaste["inputCVV"] = false 
+		if ok := tempData.CopyAndPaste["inputCVV"]; !ok { 
+		    tempData.CopyAndPaste["inputCVV"] = false 
 		} 
 		
+		// Assign the temporary value to the map
+		data.Store(dt.SessionId, tempData) 
+
 		// Print element struct 
-		log.Println(*data[dt.SessionId]) 
+		log.Println(tempData)
+		log.Println()  
 
 
 	} else { // In case the eventType is not recognised 
@@ -156,11 +166,13 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 // Print in console 'data' map method 
 func showMap(w http.ResponseWriter, r *http.Request) {
 		// Print map content 
-		fmt.Println("\n\n\nThe whole 'data' map is: ") 
-		for index := range data{ 
-			fmt.Println(data[index]) 
-		} 
-		fmt.Println("\n")  
+		log.Println("The whole 'data' map is: ") 
+		data.Range(func(key, value interface{}) bool {
+			log.Println(value); 
+			return true
+		}) 
+		log.Println("")
+		log.Println("") 
 
 		// Show message on the browser 
 		fmt.Fprintf(w, "See the terminal! ") 
@@ -169,9 +181,6 @@ func showMap(w http.ResponseWriter, r *http.Request) {
 
 // Main method 
 func main() { 
-	// Initialise 'data' map 
-	data = make(map[string]*Data) 
-	
 	// Handle index.html 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, r.URL.Path[1:]) 
@@ -184,6 +193,6 @@ func main() {
 	http.HandleFunc("/show", showMap)  
 
 	// Show message when server is up and run it on the 8080 port 
-	fmt.Println("Server now running on localhost:8080")
+	log.Println("Server is now running on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 } 

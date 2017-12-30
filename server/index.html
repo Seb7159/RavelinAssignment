@@ -78,6 +78,10 @@ body {
 <script>
 	 
 
+// Set constants 
+var DETECT_RESIZE_INTERVAL = 500; 
+
+
 // Session ID setter 
 var x = Math.floor((Math.random() * 900000) + 100000);
 var y = Math.floor((Math.random() * 900000) + 100000);
@@ -207,7 +211,7 @@ setInterval( function checkRes(){
       initHeight = finHeight;  
     }
 
-}, 1000); 
+}, DETECT_RESIZE_INTERVAL); 
 
 
 // When the submit button was pressed 
@@ -255,8 +259,7 @@ $("button").click(function(){
                               {
                                  "eventType": "timeTaken", 
                                  "websiteUrl": websiteUrl, 
-                                 "sessionId": SessionId,
-                                  
+                                 "sessionId": SessionId, 
                                  "time": finalTime 
                                 } 
                               ); 

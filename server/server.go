@@ -21,7 +21,7 @@ type tempJSONrequest struct {
 	SessionId          string			`json:"sessionId"`
 	ResizeFrom         Dimension		
 	ResizeTo           Dimension
-	CopyAndPaste       map[string]bool 	
+	CopyAndPaste       sync.Map 	
 	Pasted			   bool 			`json:"pasted"`
 	FormCompletionTime int 				`json:"time"` 
 }
@@ -33,7 +33,7 @@ type Data struct {
 	SessionId          string
 	ResizeFrom         Dimension
 	ResizeTo           Dimension
-	CopyAndPaste       map[string]bool 
+	CopyAndPaste       sync.Map 
 	FormCompletionTime int 
 }
 
@@ -41,6 +41,42 @@ type Dimension struct {
 	Width  string
 	Height string
 } 
+
+
+// Print completed struct method
+func printComplete(d Data){
+		log.Println("Website URL: " + d.WebsiteUrl)
+		log.Println("Session ID:  " + d.SessionId)
+
+	if( d.ResizeFrom.Width != "" ){
+		log.Println("ResizeFrom width:   " + d.ResizeFrom.Width)
+		log.Println("ResizeFrom height:  " + d.ResizeFrom.Height)
+		log.Println("ResizeTo width:     " + d.ResizeTo.Width)
+		log.Println("ResizeTo height:    " + d.ResizeTo.Height)
+	} else {
+		log.Println("Resize event not detected") 
+	}
+
+		boolMail, ok := d.CopyAndPaste.Load("inputEmail")
+		boolCardNo, _ := d.CopyAndPaste.Load("inputCardNumber")
+		boolCVV, _    := d.CopyAndPaste.Load("inputCVV")
+
+	// In case the struct was completed 
+	if( ok == true ){
+		log.Println("Copy and paste by form IDs: ")
+		log.Println("        inputEmail:       ", boolMail ) 
+		log.Println("        inputCardNumber:  ", boolCardNo )
+		log.Println("        inputCVV:         ", boolCVV )
+		log.Println("Form completion time:     ", d.FormCompletionTime) 
+
+	// In case it is not complete 
+	} else {
+		log.Println("The struct was NOT completed. ") 
+	}
+
+		log.Println()  
+		log.Println()  
+}
 
 // Data handler method 
 func dataHandler(w http.ResponseWriter, r *http.Request) { 
@@ -82,19 +118,16 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		tempData.WebsiteUrl    = dt.WebsiteUrl 
 		tempData.SessionId	   = dt.SessionId
 
-		// Check if map for copyAndPaste was initialised before 
-		if len(tempData.CopyAndPaste) == 0 {
-					tempData.CopyAndPaste    = make(map[string]bool) 
-		} 
-		tempData.CopyAndPaste[dt.FormId]     = dt.Pasted 
+		// Store the data 
+		tempData.CopyAndPaste.Store(dt.FormId, dt.Pasted)  
 		
 		// Assign the temporary value to the map
 		data.Store(dt.SessionId, tempData) 
 
 		// Print the confirmation 
 		log.Println("The following input was pasted: " + dt.FormId) 
-		
-
+	
+	
 	} else if dt.EventType == "resizeWindow" {
 		// In case the window was resized 
 		log.Println("RESIZE detected from the following ID: " + dt.SessionId) 
@@ -112,20 +145,24 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		data.Store(dt.SessionId, tempData) 
 
 		// Print element struct 
-		log.Println(tempData) 
+		log.Println("From (" + tempData.ResizeFrom.Width + ", " + tempData.ResizeFrom.Height +
+					") to (" + tempData.ResizeTo.Width + ", " + tempData.ResizeTo.Height + ")") 
 
 
 	} else if dt.EventType == "timeTaken" { 
 		// In case the submit button was pressed 
 		log.Println("The struct was COMPLETED by the following ID: " + dt.SessionId) 
 
-		// In case there were no copyAndPaste events before 
-		if len(tempData.CopyAndPaste) == 0 { 
-				// Initialise element if copyAndPaste or resize not happened 
-				if tempData.ResizeFrom.Width == ""{
-					tempData = Data{} 
-				}
-				tempData.CopyAndPaste    = make(map[string]bool) 
+		// Count how many fields were pasted 
+		len := 0
+		tempData.CopyAndPaste.Range(func(key, value interface{}) bool {
+			len++ 
+			return true 
+		}) 
+
+		// If not initialised, set to empty 
+		if tempData.ResizeFrom.Width == "" && len == 0 {
+			tempData = Data{} 
 		} 
 		
 		// Assign values 
@@ -133,23 +170,21 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 		tempData.SessionId 				   = dt.SessionId 
 		tempData.FormCompletionTime		   = dt.FormCompletionTime  
 		
-		// Check if the copyAndPaste map fields exist and initalise them 
-		if ok := tempData.CopyAndPaste["inputEmail"]; !ok {
-		    tempData.CopyAndPaste["inputEmail"] = false 
+		if _, ok := tempData.CopyAndPaste.Load("inputEmail"); !ok {
+		    tempData.CopyAndPaste.Store("inputEmail", false)  
 		}	
-		if ok := tempData.CopyAndPaste["inputCardNumber"]; !ok {
-		    tempData.CopyAndPaste["inputCardNumber"] = false 
+		if _, ok := tempData.CopyAndPaste.Load("inputCardNumber"); !ok {
+		    tempData.CopyAndPaste.Store("inputCardNumber", false)
 		}	
-		if ok := tempData.CopyAndPaste["inputCVV"]; !ok { 
-		    tempData.CopyAndPaste["inputCVV"] = false 
+		if _, ok := tempData.CopyAndPaste.Load("inputCVV"); !ok { 
+		    tempData.CopyAndPaste.Store("inputCVV", false)  
 		} 
 		
 		// Assign the temporary value to the map
 		data.Store(dt.SessionId, tempData) 
 
 		// Print element struct 
-		log.Println(tempData)
-		log.Println()  
+		printComplete(tempData) 
 
 
 	} else { // In case the eventType is not recognised 
@@ -165,17 +200,36 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 
 // Print in console 'data' map method 
 func showMap(w http.ResponseWriter, r *http.Request) {
-		// Print map content 
-		log.Println("The whole 'data' map is: ") 
+		// Count elements
+		leng := 0 
 		data.Range(func(key, value interface{}) bool {
-			log.Println(value); 
+			leng++ 
 			return true
 		}) 
-		log.Println("")
-		log.Println("") 
+
+		// Print map content depending whether there are elements or not 
+		if leng != 0 { 
+			log.Println()
+			log.Println() 
+			log.Println("The whole 'data' map is: ") 
+			log.Println() 
+
+			// For loop 
+			data.Range(func(key, value interface{}) bool {
+			printComplete(value.(Data)) 
+			return true
+			}) 
+
+			// Display two empty lines for the design 
+			log.Println("")
+			log.Println("") 
+		} else { 
+			log.Println("The 'data' map is empty at the moment. ") 
+		} 
+		
 
 		// Show message on the browser 
-		fmt.Fprintf(w, "See the terminal! ") 
+		fmt.Fprintf(w, "Check the terminal! ") 
 }
 
 

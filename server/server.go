@@ -244,6 +244,11 @@ func showMap(w http.ResponseWriter, r *http.Request) {
 
 
 // Main method 
+// First command will handle the 'index' page
+// Then '/data' page
+// Up next is '/show' which is optional, in order to display all data
+// Last two open the 8080 port in the localhost and sets up
+// The listen and serve method 
 func main() { 
 	// Handle index.html 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

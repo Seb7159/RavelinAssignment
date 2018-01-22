@@ -1,5 +1,7 @@
+// Package name is set to 'main' 
 package main
 
+// Import all the libraries relevant to the server 
 import (
 	"encoding/json"
 	"fmt" 
@@ -14,6 +16,7 @@ var data sync.Map;
 
 
 // Temporary JSON request struct 
+// Any JSON will be handled in this struct and the relevant data will be sent in the actual saved array of structs 
 type tempJSONrequest struct {
 	EventType		   string 			`json:"eventType"`
 	FormId			   string 			`json:"formId"`
@@ -27,7 +30,8 @@ type tempJSONrequest struct {
 }
 
 
-// Default given structs TODO: add name json to each of those 
+// Default given data struct 
+// Added sync map in order to make the server syncronized and thread-safe 
 type Data struct {
 	WebsiteUrl         string 
 	SessionId          string
@@ -37,6 +41,7 @@ type Data struct {
 	FormCompletionTime int 
 }
 
+// Default struct for the dimension type 
 type Dimension struct {
 	Width  string
 	Height string
@@ -44,6 +49,7 @@ type Dimension struct {
 
 
 // Print completed struct method
+// @param d   The data struct that has to be printed 
 func printComplete(d Data){
 		log.Println("Website URL: " + d.WebsiteUrl)
 		log.Println("Session ID:  " + d.SessionId)
@@ -79,6 +85,8 @@ func printComplete(d Data){
 }
 
 // Data handler method 
+// @param w    The response writer for the http
+// @param r    The request from the http server
 func dataHandler(w http.ResponseWriter, r *http.Request) { 
 	// Decode the JSON 
 	decoder := json.NewDecoder(r.Body) 
@@ -199,6 +207,8 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 
 
 // Print in console 'data' map method 
+// @param w    The response writer for the http
+// @param r    The request from the http server 
 func showMap(w http.ResponseWriter, r *http.Request) {
 		// Count elements
 		leng := 0 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html> 
   <head>
-    <title>Bootstrap 101 Template</title>
+    <title>Server in golang</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <!-- Latest compiled and minified CSS -->
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -42,10 +42,7 @@ body {
   </head>
   <body>
 
-
-
     <div class="container">
-
       <form class="form-details" method="post">
 
         <h2 class="form-details-heading">Details</h2>
@@ -70,7 +67,6 @@ body {
 
         <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
       </form>
-
     </div> <!-- /container -->
 
   </body>
@@ -81,8 +77,6 @@ body {
 // Set constants 
 var DETECT_RESIZE_INTERVAL = 500; 
 
-
-// Session ID setter 
 var x = Math.floor((Math.random() * 900000) + 100000);
 var y = Math.floor((Math.random() * 900000) + 100000);
 var z = Math.floor((Math.random() * 900000000) + 100000000);
@@ -129,7 +123,6 @@ function sendCopyPaste(nameField, theBool){
         }  
     };
     
-    // Construct and send JSON request 
     var data = JSON.stringify( 
                                { 
                                 "eventType": "copyAndPaste", 
@@ -159,7 +152,6 @@ document.onkeydown = function(e) {
 };
 
 
-// Handle error from HTTP bad request method 
 function error_handle(ready, status){
   console.log("Error HTTP status " + status + " with ready state " + ready + "!"); 
 }
@@ -200,11 +192,9 @@ function sendResizeData( width, height){
 
 // Check on resize event every 1 second, send JSON request 
 setInterval( function checkRes(){
-    // Detect dimension of window and send HTTP request in case of change 
     var finWidth  = window.innerWidth.toString(),
         finHeight = window.innerHeight.toString(); 
     
-    // If it's true, send the request 
     if( finWidth !== initWidth || finHeight !== initHeight ){ 
       sendResizeData( finWidth, finHeight);
       initWidth  = finWidth;   
@@ -216,18 +206,15 @@ setInterval( function checkRes(){
 
 // When the submit button was pressed 
 $("button").click(function(){ 
-    // Is letter method 
     function isLetter(str) { 
       return str.match("^[a-zA-Z0-9_]*$");
     }
-
-    // Validate mail address method 
+ 
     function validateEmail(email) {
       var re = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/; 
       return re.test(email.toLowerCase());
     } 
 
-    // Validate fields first 
     var inputMail = document.getElementById("inputEmail").value; 
     if( validateEmail(inputMail) == false ||  
         document.getElementById("inputEmail").value == "" || 
@@ -236,11 +223,10 @@ $("button").click(function(){
         document.getElementById("inputEmail").value.indexOf("@") === -1 ) 
           return;  
 
-    // Check if there is a start time 
     if( flag == true ) 
       finalTime = Math.round(new Date().getTime() / 1000) - startTime; 
     
-    // Create JSON request and send 
+
     var xhr = new XMLHttpRequest();
     var url = websiteUrl + "data";
     xhr.open("POST", url, true);
@@ -254,7 +240,6 @@ $("button").click(function(){
         } 
     };
 
-    // Construct JSON and send it 
     var data = JSON.stringify( 
                               {
                                  "eventType": "timeTaken", 
